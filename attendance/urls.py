@@ -1,15 +1,14 @@
-from rest_framework.routers import DefaultRouter
-from .views import *
-router = DefaultRouter()
-router.register(r'employees', EmployeeViewSet)
-# router.register(r'attendance', AttendanceViewSet)
-urlpatterns = router.urls
 from django.urls import path
-from . import views
+from .views import EmployeeRegistrationView, EmployeeLoginView, CheckInView, CheckOutView,DepartmentView
+from rest_framework.routers import DefaultRouter
 
-
+router = DefaultRouter()
+router.register(r'api/department',DepartmentView,basename='department')
 urlpatterns = [
-    path('api/check_in/<int:pk>/', views.check_in),
-    path('api/check_out/<int:pk>/', views.check_out),
+   # path('department/',DepartmentView.as_view(),name='employee-department'),
+    path('api/register/', EmployeeRegistrationView.as_view(), name='employee-register'),
+    path('api/login/', EmployeeLoginView.as_view(), name='employee-login'),
+    path('api/checkin/', CheckInView.as_view(), name='checkin'),
+    path('api/checkout/', CheckOutView.as_view(), name='checkout'),
     # Other URLs
 ]+ router.urls
