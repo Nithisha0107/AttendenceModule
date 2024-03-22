@@ -5,8 +5,8 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from .models import Employee, Attendance,Department
-from .serializers import EmployeeSerializer,DepartmentSerializer
-import time
+from .serializers import EmployeeSerializer,DepartmentSerializer,AttendanceSerializer
+from datetime import datetime
 from django.utils import timezone
 from django.contrib.auth import authenticate
 from rest_framework.permissions import IsAuthenticated
@@ -51,6 +51,7 @@ class CheckInView(APIView):
         employee = request.user.employee
         try:
             latest_attendance = Attendance.objects.filter(employee=employee).latest('check_in')
+            #import pdb;pdb.set_trace()
             if not latest_attendance.check_out:
                 return Response({'error': 'Employee already checked in'}, status=status.HTTP_400_BAD_REQUEST)
         except Attendance.DoesNotExist:
@@ -60,25 +61,29 @@ class CheckInView(APIView):
         return Response({'message': 'Checked in successfully'})
 
 class CheckOutView(APIView):
-    #permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         employee = request.user.employee
         
         #check_out_list = []
         try:
+            #import pdb;pdb.set_trace()
             latest_attendance = Attendance.objects.filter(employee=employee).latest('check_in')
             if latest_attendance.check_out:
                 return Response({'error': 'Employee already checked out'}, status=status.HTTP_400_BAD_REQUEST)
-            latest_attendance.check_out = timezone.now()  # Use timezone.now() to get an offset-aware datetime
+            #import pdb;pdb.set_trace()
+            latest_attendance.check_out = datetime.now().time()  # Use timezone.now() to get an offset-aware datetime
             #check_out_list.append(timezone.now())
             latest_attendance.save()
             
-            check_in_time = latest_attendance.check_in.astimezone(timezone.get_current_timezone())  # Convert check_in_time to the project timezone
-            check_out_time = timezone.make_aware(time.time.now(), timezone.get_current_timezone())  # Make check_out_time aware using Django's timezone
             
-            # Calculate attendance hours
-            attendance_hours = (check_out_time - check_in_time).total_seconds() / 3600
+            check_in_time = latest_attendance.check_in
+            check_out_time =latest_attendance.check_out
+            check_in_datetime = datetime.combine(datetime.today(), check_in_time)
+            check_out_datetime = datetime.combine(datetime.today(), check_out_time)
+            attendance_timedelta = check_out_datetime - check_in_datetime
+            attendance_hours = attendance_timedelta.total_seconds() / 3600
             if attendance_hours >= 9:
                 status1 = 'Present'
             else:
@@ -89,3 +94,8 @@ class CheckOutView(APIView):
             return Response({'message': 'Checked out successfully', 'status1': status1})
         except Attendance.DoesNotExist:
             return Response({'error': 'Employee has not checked in yet'}, status=status.HTTP_400_BAD_REQUEST)
+        
+class  AttendanceView(APIView):
+
+    def get(self,request):
+        pass

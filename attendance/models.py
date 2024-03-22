@@ -14,7 +14,7 @@ class Employee(models.Model):
     # Add other employee fields as needed
 
     def __str__(self):
-        return self.user
+        return self.user.username
 
 class Attendance(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
@@ -24,7 +24,7 @@ class Attendance(models.Model):
     status = models.CharField(max_length=10,blank =True)
     duration = models.GeneratedField( expression=F("check_out") - F("check_in"),
         output_field=models.FloatField(),
-        db_persist=False,)
+        db_persist=True,)
     def __str__(self):
         return f"{self.employee} - {self.check_in} to {self.check_out}"
     
