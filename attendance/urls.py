@@ -10,6 +10,6 @@ urlpatterns = [
     path('api/login/', EmployeeLoginView.as_view(), name='employee-login'),
     path('api/checkin/', CheckInView.as_view(), name='checkin'),
     path('api/checkout/', CheckOutView.as_view(), name='checkout'),
-    path('api/attendance',AttendanceView.as_view(),name = 'employee_attendance')
+    path('api/attendance/',AttendanceView.as_view(),name = 'employee_attendance')
     # Other URLs
 ]+ router.urls
