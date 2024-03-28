@@ -127,15 +127,33 @@ class CheckOutView(APIView):
         
 class  AttendanceView(APIView):
 
+
     def get(self,request):
+        #import pdb;pdb.set_trace()
         user = request.user
         employee = Employee.objects.get(user=user)
         
-        # Get today's date
-        today = datetime.today().date()
+        # # Get today's date
+        # today = datetime.today().date()
+
+        
+        date_string = request.query_params.get('date')
+        month_string = request.query_params.get('month')
+       
+        
+       
+        if date_string :
+            date_object = datetime.strptime(date_string, "%d-%m-%Y")
+            attendances_today = Attendance.objects.filter(employee=employee, date=date_object)
+
+        else :
+            date_object = int(month_string)
+            attendances_today = Attendance.objects.filter(employee=employee, date__month=date_object)
+
         
         # Get all attendance records for the employee for today
-        attendances_today = Attendance.objects.filter(employee=employee, date=today)
+        
+        
         
         # Calculate total working hours for the day
         total_working_hours = sum([attendance.duration for attendance in attendances_today if attendance.duration])
@@ -149,3 +167,7 @@ class  AttendanceView(APIView):
             attendance.save()
         
         return Response({'status1': status1, 'total_working_hours': total_working_hours}, status=status.HTTP_200_OK)
+
+class AttendaceMonthlyReport(APIView):
+    def get(self,request):
+        pass
