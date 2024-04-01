@@ -1,17 +1,25 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models import F
+
+
 class Department(models.Model):
     technology = models.CharField(max_length = 20,unique = True)
 
+    def __str__(self):
+        return f'{self.id}'
+
 class Employee(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    #department = models.ForeignKey(Department,on_delete = models.CASCADE)
+    department = models.ForeignKey(Department,on_delete = models.CASCADE)
     #First_name = models.CharField(max_length=50)
     #Last_name = models.CharField(max_length=50)
-    #email = models.EmailField()
-    #phone_number = models.IntegerField()
+    email = models.EmailField()
+    phone_number = models.IntegerField(unique = True)
     # Add other employee fields as needed
+
+    class Meta:
+        db_table = 'Employee'
 
     def __str__(self):
         return self.user.username
