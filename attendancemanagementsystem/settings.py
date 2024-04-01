@@ -139,3 +139,19 @@ REST_FRAMEWORK = {
     )
     
 }
+
+
+
+from celery.schedules import crontab
+
+# settings.py
+CELERY_BROKER_URL = 'http://localhost:8000'
+CELERY_RESULT_BACKEND = 'http://localhost:8000'
+
+CELERY_BEAT_SCHEDULE = {
+    'send-email-every-day': {
+        'task': 'attendance.task.send_email_task',
+        'schedule': crontab(hour=11, minute=40),  # Example: run every day at 7:30 AM
+    },
+    # Add more scheduled tasks as needed
+}
