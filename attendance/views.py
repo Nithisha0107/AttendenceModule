@@ -213,10 +213,14 @@ class AttendanceView(APIView):
                 # Update previous check-out time
                 previous_check_out_time = check_out_datetime
             
-            
-            status1 = "Present" if total_working_hours >= 9 else ("0.5 Present" if 4 <= total_working_hours < 9 else "Absent")
+            if total_working_hours >= 24:
+                status1 = "Absent"
+            elif total_working_hours >= 4:
+                status1 = "Present" if total_working_hours >= 9 else "0.5 Present"
+            else:
+                status1 = "Absent"
 
-
+                
             total_working_hours_str = str(timedelta(hours=total_working_hours))
             total_break_hours_str = str(timedelta(hours=total_break_hours))
             # Append attendance data for the current date to the list
