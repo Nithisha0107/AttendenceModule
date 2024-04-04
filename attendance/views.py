@@ -195,39 +195,28 @@ class AttendanceView(APIView):
             total_break_hours = 0
             check_in_time = None
             check_out_time = None
-            
-            
-            # Calculate total working hours and collect check-in/check-out times
+            previous_check_out_time = None
             for attendance in attendances_for_date:
-                import pdb;pdb.set_trace()
-                if attendance.check_out:
-                    if check_in_time is None:
-                        check_in_time = attendance.check_in
-                    check_out_time = attendance.check_out
+                # Combine date and time to create datetime objects
+                check_in_datetime = datetime.combine(current_date, attendance.check_in)
+                check_out_datetime = datetime.combine(current_date, attendance.check_out)
 
-                    # Combine date and time to create datetime objects
-                    check_in_datetime = datetime.combine(current_date, check_in_time)
-                    check_out_datetime = datetime.combine(current_date, check_out_time)
+                # Calculate duration worked
+                duration_worked = (check_out_datetime - check_in_datetime).total_seconds() / 3600
+                total_working_hours += duration_worked
 
-                    # Calculate duration worked
-                    duration_worked = (check_out_datetime - check_in_datetime).total_seconds() / 3600
-                    total_working_hours += duration_worked
+                # If there was a previous check-out, calculate break duration
+                if previous_check_out_time is not None:
+                    break_duration = (check_in_datetime - previous_check_out_time).total_seconds() / 3600
+                    total_break_hours += break_duration
 
-                    # Update check_in_time for the next check-in
-                    check_in_time = None
-
-                else:
-                    # If there was a previous check-out, calculate break duration
-                    if check_out_time is not None:
-                        break_duration = (attendance.check_in - check_out_time).total_seconds() / 3600
-                        total_break_hours += break_duration
+                # Update previous check-out time
+                previous_check_out_time = check_out_datetime
             
-            if total_working_hours >= 9 :
-                status1 = "Present"
-            elif total_working_hours >= 4 and total_working_hours <= 9:
-                status1 = "0.5 Present"
-            else :
-                status1 = 'Absent'
+            
+            status1 = "Present" if total_working_hours >= 9 else ("0.5 Present" if 4 <= total_working_hours < 9 else "Absent")
+
+
             total_working_hours_str = str(timedelta(hours=total_working_hours))
             total_break_hours_str = str(timedelta(hours=total_break_hours))
             # Append attendance data for the current date to the list
@@ -246,62 +235,6 @@ class AttendanceView(APIView):
         return Response({'attendance_data': attendance_data}, status=status.HTTP_200_OK)
 
         
-class  AttenddfanceView(APIView):
-
-    def get(self, request):
-        user = request.user
-        employee = Employee.objects.get(user=user)
-        start_date_string = request.query_params.get('start_date')
-        end_date_string = request.query_params.get('end_date')
-        
-        # Parse start_date and end_date strings into datetime objects
-        start_date = datetime.strptime(start_date_string, "%d-%m-%Y").date()
-        end_date = datetime.strptime(end_date_string, "%d-%m-%Y").date()
-
-        # Retrieve attendance records within the specified date range
-        attendances_in_range = Attendance.objects.filter(employee=employee, date__range=[start_date, end_date])
-        
-        # Calculate total working hours for the specified date range
-        total_working_hours = sum([attendance.duration for attendance in attendances_in_range if attendance.duration])
-        
-        # Determine the status based on total working hours
-        status1 = 'Present' if total_working_hours >= 9 else 'Absent'
-        
-        # Update status for all attendance records in the date range
-        for attendance in attendances_in_range:
-            attendance.status = status1
-            attendance.save()
-        
-        return Response({'status1': status1, 'total_working_hours': total_working_hours}, status=status.HTTP_200_OK)
-    # def get(self,request):
-    #     #import pdb;pdb.set_trace()
-    #     user = request.user
-    #     employee = Employee.objects.get(user=user)
-    #     date_string = request.query_params.get('date')
-    #     month_string = request.query_params.get('month')
-       
-        
-       
-    #     if date_string :
-    #         date_object = datetime.strptime(date_string, "%d-%m-%Y")
-    #         attendances_today = Attendance.objects.filter(employee=employee, date=date_object)
-
-    #     else :
-    #         date_object = int(month_string)
-    #         attendances_today = Attendance.objects.filter(employee=employee, date__month=date_object)
-        
-    #     # Calculate total working hours for the day
-    #     total_working_hours = sum([attendance.duration for attendance in attendances_today if attendance.duration])
-        
-    #     # Determine the status based on total working hours
-    #     status1 = 'Present' if total_working_hours >= 9 else 'Absent'
-        
-    #     # Update status for all attendance records for today
-    #     for attendance in attendances_today:
-    #         attendance.status = status
-    #         attendance.save()
-        
-    #     return Response({'status1': status1, 'total_working_hours': total_working_hours}, status=status.HTTP_200_OK)
 
 
 
